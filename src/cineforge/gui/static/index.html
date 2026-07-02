@@ -235,8 +235,8 @@ $('#create').onclick = async () => {
   const r = await post('/api/new', {idea, name:$('#name').value.trim(), style:$('#style').value});
   $('#new-msg').textContent = r.name ? `Created "${r.name}". Open it under Projects to run.` : (r.error||'error');
 };
-$('#pd-run').onclick = () => curProject && post('/api/run', {name:curProject});
-$('#pd-resume').onclick = () => curProject && post('/api/run', {name:curProject, resume:true});
+$('#pd-run').onclick = () => { if (curProject) { post('/api/run', {name:curProject}); selectTab('dash'); } };
+$('#pd-resume').onclick = () => { if (curProject) { post('/api/run', {name:curProject, resume:true}); selectTab('dash'); } };
 
 async function loadInstallStatus(autoswitch) {
   try {
