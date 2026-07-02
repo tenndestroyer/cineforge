@@ -216,11 +216,19 @@ class ComfyBackend(Backend):
         return ComfyClient(self.cfg.comfy_url)
 
     def _require_ready(self) -> None:
-        client = self._client()
-        if not client.is_reachable():
+        from ..models import comfy_server
+
+        # Auto-launch ComfyUI on first render (idempotent). Returns False only if
+        # ComfyUI isn't installed yet, in which case we tell the user to install.
+        if not comfy_server.ensure_running(self.cfg):
+            if not comfy_server.installed(self.cfg):
+                raise NotInstalledError(
+                    f"ComfyUI is not installed. Open the GUI's Setup tab and click "
+                    f"'Install everything' (or run setup). ({self.model_id})"
+                )
             raise NotInstalledError(
-                f"ComfyUI is not reachable at {self.cfg.comfy_url}. Run `cineforge doctor` "
-                f"or (re)run setup to install it. ({self.model_id})"
+                f"ComfyUI could not be started at {self.cfg.comfy_url}. "
+                f"See docs/TROUBLESHOOTING.md. ({self.model_id})"
             )
         missing = [w for w in self.required_weights if not (self.cfg.models_dir / w).exists()]
         if missing:

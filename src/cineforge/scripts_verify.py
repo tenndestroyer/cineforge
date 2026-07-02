@@ -10,6 +10,7 @@ import shutil
 import sys
 
 from .config import Config
+from .hardware import classify_vram, detect_gpus, primary_gpu, select_backend
 from .models.comfy_client import ComfyClient
 from .models.licenses import LicenseGate
 from .models.matrix import ModelMatrix
@@ -103,3 +104,68 @@ def run_doctor(cfg: Config) -> list[dict]:
                          "all matrix models have adapters" if not missing else f"missing adapters: {missing}"))
 
     return checks
+
+
+def install_status(cfg: Config) -> dict:
+    """Structured, GUI-friendly install status: per-component ok/detail, an overall
+    `ready` flag (all critical components satisfied), GPU/tier, and token state."""
+    comps: list[dict] = []
+
+    def add(key: str, label: str, ok: bool, detail: str, critical: bool = True) -> None:
+        comps.append({"key": key, "label": label, "ok": bool(ok), "detail": detail, "critical": critical})
+
+    v = sys.version_info
+    add("python", "Python 3.10-3.12", (3, 10) <= (v.major, v.minor) <= (3, 12),
+        f"{v.major}.{v.minor}.{v.micro}", critical=False)
+
+    torch_ok, torch_detail = False, "not installed - run install"
+    try:
+        import torch
+
+        torch_ok = True
+        cuda = torch.cuda.is_available()
+        torch_detail = f"torch {torch.__version__} (cuda={cuda})"
+    except ImportError:
+        pass
+    add("torch", "PyTorch", torch_ok, torch_detail)
+
+    plan = select_backend()
+    g = plan.gpu
+    add("gpu", "GPU acceleration", bool(g and g.vendor != "cpu"),
+        f"{g.name} -> {plan.runtime}/{plan.torch_channel}" if g else "none", critical=False)
+
+    comfy_ok = (cfg.comfy_dir / "main.py").is_file()
+    add("comfyui", "ComfyUI engine", comfy_ok, "installed" if comfy_ok else "not installed (Install downloads it)")
+
+    from .backends.llm.ollama import OllamaLLM
+
+    ol = OllamaLLM(cfg.ollama_url).available()
+    add("ollama", "Ollama (agent brain)", ol, "running" if ol else "not reachable - install from ollama.com")
+
+    ff = shutil.which("ffmpeg") is not None
+    add("ffmpeg", "FFmpeg (audio/video)", ff, "found" if ff else "not on PATH (Install adds it)")
+
+    matrix = ModelMatrix.load(cfg.data_dir / "model_matrix.json")
+    tier = cfg.tier_override or classify_vram(primary_gpu(detect_gpus()).vram_gb)
+    needed, present = [], 0
+    for sub in matrix.subsystems():
+        c = matrix.resolve(sub, tier, "safe")
+        if not c.repo or c.repo.startswith("ollama:"):
+            continue
+        needed.append(sub)
+        d = cfg.models_dir / sub / c.model_id
+        if d.is_dir() and any(d.iterdir()):
+            present += 1
+    total = len(needed)
+    add("weights", "Model weights", total > 0 and present == total, f"{present}/{total} downloaded (tier {tier})")
+
+    ready = all(c["ok"] for c in comps if c["critical"])
+    return {
+        "ready": ready,
+        "components": comps,
+        "tier": tier,
+        "gpu": {"name": g.name, "vendor": g.vendor, "vram_gb": g.vram_gb, "runtime": plan.runtime} if g else {},
+        "has_hf_token": bool(cfg.hf_token),
+        "needs_hf_token": cfg.license_mode == "research",
+        "platform": sys.platform,
+    }

@@ -7,8 +7,10 @@ crashes detection (this runs before torch is guaranteed installed).
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 
 
@@ -78,6 +80,70 @@ def _from_nvidia_smi() -> list[GpuInfo]:
     return gpus
 
 
+def _vendor_from_name(name: str) -> tuple[str, str]:
+    """(vendor, backend_hint) from a GPU name string, platform-aware."""
+    low = name.lower()
+    if "nvidia" in low or "geforce" in low or "quadro" in low or "tesla" in low:
+        return "nvidia", "cuda"
+    if "amd" in low or "radeon" in low or "advanced micro" in low:
+        return "amd", ("rocm" if sys.platform != "win32" else "directml")
+    if "intel" in low or "arc" in low:
+        return "intel", ("directml" if sys.platform == "win32" else "cpu")
+    return "unknown", "directml" if sys.platform == "win32" else "cpu"
+
+
+def _from_wmi() -> list[GpuInfo]:
+    """Windows: identify the GPU vendor/name via WMI even before torch is installed.
+    NOTE: WMI AdapterRAM is a 32-bit field that caps ~4 GB, so VRAM here is only a
+    lower bound (tiering stays conservative until torch reports the real number)."""
+    if sys.platform != "win32":
+        return []
+    try:
+        out = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_VideoController | Select-Object Name,AdapterRAM | ConvertTo-Json -Compress"],
+            capture_output=True, text=True, timeout=20,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    try:
+        data = json.loads(out.stdout or "[]")
+    except json.JSONDecodeError:
+        return []
+    if isinstance(data, dict):
+        data = [data]
+    gpus: list[GpuInfo] = []
+    for i, d in enumerate(data):
+        name = (d.get("Name") or "").strip()
+        if not name:
+            continue
+        vendor, hint = _vendor_from_name(name)
+        ram = d.get("AdapterRAM") or 0
+        vram = round(ram / (1024 ** 3), 1) if ram and ram > 0 else 0.0
+        gpus.append(GpuInfo(vendor, name, vram, backend_hint=hint, index=i))
+    discrete = [g for g in gpus if g.vendor in ("nvidia", "amd")]
+    return discrete or gpus
+
+
+def _from_lspci() -> list[GpuInfo]:
+    """Linux: identify the GPU vendor/name via lspci before torch is installed."""
+    if sys.platform == "win32" or not shutil.which("lspci"):
+        return []
+    try:
+        out = subprocess.run(["lspci"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    gpus: list[GpuInfo] = []
+    for line in out.stdout.splitlines():
+        if any(k in line for k in ("VGA compatible controller", "3D controller", "Display controller")):
+            desc = line.split(": ", 1)[-1][:80]
+            vendor, hint = _vendor_from_name(desc)
+            if vendor in ("nvidia", "amd", "intel"):
+                gpus.append(GpuInfo(vendor, desc, 0.0, backend_hint=hint))
+    discrete = [g for g in gpus if g.vendor in ("nvidia", "amd")]
+    return discrete or gpus
+
+
 def _from_directml() -> list[GpuInfo]:
     try:
         import torch_directml  # noqa: F401
@@ -88,7 +154,9 @@ def _from_directml() -> list[GpuInfo]:
 
 
 def detect_gpus() -> list[GpuInfo]:
-    for source in (_from_torch, _from_nvidia_smi, _from_directml):
+    # torch (real VRAM) first, then vendor-id fallbacks that work before torch is
+    # installed (nvidia-smi, Windows WMI, Linux lspci), then DirectML, then CPU.
+    for source in (_from_torch, _from_nvidia_smi, _from_wmi, _from_lspci, _from_directml):
         gpus = source()
         if gpus:
             return gpus

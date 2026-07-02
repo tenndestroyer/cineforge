@@ -55,25 +55,22 @@ per-subsystem breakdown.
 - **Bulletproof installer** — `Run.bat` (Windows) / `run.sh` (Linux) provisions a
   pinned CPython 3.12, the right torch wheel, ComfyUI, and size-verified model weights.
 
-## Quick start (Windows)
+## Quick start
 
-```bat
-:: 1) put your Hugging Face token in keys.env (only needed for gated/opt-in models)
-copy keys.env.example keys.env    &&  notepad keys.env
+**Double-click `Run.bat`** (Windows) or run `./run.sh` (Linux). The GUI opens to a
+guided **Setup** tab that:
 
-:: 2) one click — installs everything the first time, launches the GUI thereafter
-Run.bat
-```
+- shows a **live checklist** of what's installed (Python, PyTorch, ComfyUI + nodes,
+  Ollama models, ffmpeg, model weights) — each flips to ✅ as it's satisfied,
+- has an **Install everything** button that downloads it all with progress streaming
+  into the Activity feed,
+- lets you paste a **Hugging Face token** (only needed for gated models — the defaults
+  need none), and
+- flips to a green **READY TO RENDER** badge when everything's in place.
 
-Linux:
-
-```bash
-cp keys.env.example keys.env   # optional, only for gated models
-./run.sh
-```
-
-The first run downloads ~30–100 GB of weights depending on your tier (this is the
-long part). After that, Cineforge is fully offline.
+Hardware is auto-detected: **NVIDIA** → CUDA (Blackwell/RTX-50 → nightly torch),
+**AMD** → ROCm on Linux / DirectML on Windows, else CPU. The first install downloads
+several GB (tens of GB for a full multi-tier set). After that, Cineforge is fully offline.
 
 ### CLI
 

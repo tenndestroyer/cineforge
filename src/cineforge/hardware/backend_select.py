@@ -11,6 +11,7 @@ Encodes the two facts the research flagged as easy to get catastrophically wrong
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 
 from .detect import GpuInfo, primary_gpu
@@ -67,10 +68,15 @@ def select_backend(gpus: list[GpuInfo] | None = None) -> BackendPlan:
         return BackendPlan("cuda", channel, quant, warnings, gpu)
 
     if gpu.vendor == "amd":
+        if sys.platform == "win32":
+            warnings.append(
+                "AMD on Windows -> DirectML (ROCm has no Windows wheels). It works, but it's a "
+                "degraded path with no real VRAM management; expect slower renders."
+            )
+            return BackendPlan("directml", "directml", "fp16", warnings, gpu)
         warnings.append(
-            "AMD/ROCm: using fp8/safetensors, NOT GGUF (GGUF is broken/unusably slow on "
-            "ROCm, especially on Windows). If ROCm torch fails to import, setup falls back "
-            "to torch-directml automatically."
+            "AMD/ROCm (Linux): using fp8/safetensors, NOT GGUF (broken/slow on ROCm). Use a "
+            "ROCm-supported card (RX 7000/9000 / W7000)."
         )
         return BackendPlan("rocm", "rocm", "fp8", warnings, gpu)
 

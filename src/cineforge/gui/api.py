@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import threading
 from typing import Any
 
@@ -22,6 +24,8 @@ class GuiApi:
         self.matrix = ModelMatrix.load(cfg.data_dir / "model_matrix.json")
         self._thread: threading.Thread | None = None
         self._run_lock = threading.Lock()
+        self._install_thread: threading.Thread | None = None
+        self._install_lock = threading.Lock()
 
     # ---- data ----
     def _tier(self) -> tuple[str, Any, Any]:
@@ -107,6 +111,57 @@ class GuiApi:
         self.events.emit("info", "license", f"acknowledged {model_id} for {name}")
         return {"ok": True, "acks": project.license_acks}
 
+    # ---- install / onboarding ----
+    def install_status(self) -> dict:
+        from ..scripts_verify import install_status as _status
+
+        st = _status(self.cfg)
+        st["installing"] = bool(self._install_thread and self._install_thread.is_alive())
+        return st
+
+    def save_keys(self, hf_token: str) -> dict:
+        keys_path = self.cfg.repo_root / "keys.env"
+        lines = []
+        if keys_path.is_file():
+            lines = [ln for ln in keys_path.read_text(encoding="utf-8").splitlines()
+                     if not ln.strip().startswith("HF_TOKEN=")]
+        lines.append(f"HF_TOKEN={hf_token.strip()}")
+        keys_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        self.cfg.hf_token = hf_token.strip()
+        self.events.emit("info", "keys", "saved HF_TOKEN to keys.env")
+        return {"ok": True, "has_hf_token": bool(hf_token.strip())}
+
+    def start_install(self) -> dict:
+        def _run() -> None:
+            self.events.emit("stage", "install", "Starting installer — downloads several GB (torch, ComfyUI, models)...")
+            if sys.platform == "win32":
+                cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                       "-File", str(self.cfg.repo_root / "setup.ps1")]
+            else:
+                cmd = ["bash", str(self.cfg.repo_root / "setup.sh")]
+            try:
+                proc = subprocess.Popen(cmd, cwd=str(self.cfg.repo_root), stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True, bufsize=1)
+                for line in proc.stdout:  # stream installer output live into the events feed
+                    line = line.rstrip()
+                    if line.strip():
+                        self.events.emit("info", "install", line)
+                proc.wait()
+                if proc.returncode == 0:
+                    self.events.emit("info", "install", "Install complete — you're ready to render.", pct=100.0)
+                else:
+                    self.events.emit("error", "install",
+                                     f"Installer exited with code {proc.returncode}. See docs/TROUBLESHOOTING.md")
+            except Exception as e:  # noqa: BLE001 - surface to the feed, don't crash the server
+                self.events.emit("error", "install", f"{type(e).__name__}: {e}")
+
+        with self._install_lock:
+            if self._install_thread and self._install_thread.is_alive():
+                return {"ok": False, "error": "install already running"}
+            self._install_thread = threading.Thread(target=_run, name="install", daemon=True)
+            self._install_thread.start()
+        return {"ok": True}
+
     # ---- routing ----
     def handle(self, method: str, path: str, query: dict, body: dict | None) -> tuple[int, str, bytes]:
         try:
@@ -138,6 +193,12 @@ class GuiApi:
             return self.start_run(body.get("name", ""), resume=bool(body.get("resume")))
         if method == "POST" and path == "/api/ack":
             return self.ack(body.get("name", ""), body.get("model_id", ""))
+        if method == "GET" and path == "/api/install_status":
+            return self.install_status()
+        if method == "POST" and path == "/api/save_keys":
+            return self.save_keys(body.get("hf_token", ""))
+        if method == "POST" and path == "/api/install":
+            return self.start_install()
         raise FileNotFoundError(f"no route: {method} {path}")
 
 

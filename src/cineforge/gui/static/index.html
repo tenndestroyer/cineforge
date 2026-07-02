@@ -52,9 +52,11 @@
   <span id="s-gpu" class="pill">detecting…</span>
   <span id="s-tier" class="pill"></span>
   <span id="s-lic" class="pill"></span>
+  <span id="s-ready" class="pill">checking…</span>
   <span id="s-run" class="pill" style="display:none">running</span>
 </header>
 <nav>
+  <button data-tab="setup">Setup</button>
   <button data-tab="dash" class="active">Dashboard</button>
   <button data-tab="new">New Project</button>
   <button data-tab="models">Models</button>
@@ -65,6 +67,30 @@
     <b>Honest ceiling:</b> Cineforge makes a polished, character-consistent <i>stylized</i> AI short —
     not rigged Pixar/Moonbug. Local open-source in 2026 has real limits; see docs/QUALITY_CEILING.md.
   </div>
+
+  <section id="tab-setup" style="display:none">
+    <div class="card">
+      <h2>Setup &nbsp;<span id="ready-badge" class="pill">checking…</span></h2>
+      <p class="muted">Cineforge installs everything it needs locally. Click <b>Install everything</b> to
+        download Python 3.12, PyTorch (auto-tuned to your GPU), ComfyUI + nodes, the Ollama agent
+        models, and the render weights for your tier. Progress streams into the Dashboard's Activity feed.</p>
+      <div id="install-checklist" class="muted">checking…</div>
+      <div class="row" style="margin-top:14px">
+        <button class="act" id="btn-install">Install everything</button>
+        <button class="ghost" id="btn-refresh-status">Recheck</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Keys <span class="muted" style="font-weight:400">(optional)</span></h2>
+      <p class="muted">A Hugging Face token is only needed for <b>gated</b> models (FLUX.2, LTX-2.3).
+        The default Apache/MIT models (Wan 2.2, Z-Image, Chatterbox, ACE-Step…) need none.
+        Get one at huggingface.co/settings/tokens (read scope).</p>
+      <label>HF_TOKEN</label>
+      <input id="hf-token" placeholder="hf_..." />
+      <button class="act" id="btn-save-keys">Save token</button>
+      <span id="keys-msg" class="muted" style="margin-left:10px"></span>
+    </div>
+  </section>
 
   <section id="tab-dash">
     <div class="card">
@@ -129,13 +155,15 @@ const api = async (p, opts) => (await fetch(p, opts)).json();
 const post = (p, body) => api(p, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})});
 let lastSeq = 0, curProject = null;
 
-document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active');
-  ['dash','new','models','projects'].forEach(t => $('#tab-'+t).style.display = (t===b.dataset.tab?'block':'none'));
-  if (b.dataset.tab==='models') loadModels();
-  if (b.dataset.tab==='projects') loadProjects();
-});
+const TABS = ['setup','dash','new','models','projects'];
+function selectTab(name) {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x.dataset.tab===name));
+  TABS.forEach(t => { const el=$('#tab-'+t); if (el) el.style.display = (t===name?'block':'none'); });
+  if (name==='models') loadModels();
+  if (name==='projects') loadProjects();
+  if (name==='setup') loadInstallStatus(false);
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => selectTab(b.dataset.tab));
 
 async function refreshStatus() {
   try {
@@ -210,7 +238,35 @@ $('#create').onclick = async () => {
 $('#pd-run').onclick = () => curProject && post('/api/run', {name:curProject});
 $('#pd-resume').onclick = () => curProject && post('/api/run', {name:curProject, resume:true});
 
-refreshStatus(); loadProjects();
+async function loadInstallStatus(autoswitch) {
+  try {
+    const st = await api('/api/install_status');
+    $('#s-ready').textContent = st.ready ? 'READY' : (st.installing ? 'installing…' : 'setup needed');
+    $('#s-ready').className = 'pill' + (st.ready ? ' run' : '');
+    const rb = $('#ready-badge');
+    if (rb) { rb.textContent = st.ready ? '✅ READY TO RENDER' : (st.installing ? '⏳ installing…' : '⚙ setup needed');
+              rb.className = 'pill' + (st.ready ? ' run' : ''); }
+    const cl = $('#install-checklist');
+    if (cl) { cl.classList.remove('muted'); cl.innerHTML = (st.components||[]).map(c => {
+      const icon = c.ok ? '✅' : (c.critical ? '⭕' : '▫️');
+      return `<div style="padding:6px 0;border-bottom:1px solid var(--line)">${icon} <b>${c.label}</b> <span class="muted">— ${c.detail}</span></div>`;
+    }).join(''); }
+    const btn = $('#btn-install');
+    if (btn) { btn.disabled = !!st.installing;
+               btn.textContent = st.installing ? 'Installing…' : (st.ready ? 'Reinstall / update' : 'Install everything'); }
+    const h = $('#hf-token'); if (h && st.has_hf_token && !h.value) h.placeholder = 'hf_… (a token is already saved)';
+    if (autoswitch && !st.ready && !st.installing) selectTab('setup');
+  } catch(e){}
+}
+$('#btn-install').onclick = async () => { await post('/api/install', {}); selectTab('dash'); };
+$('#btn-refresh-status').onclick = () => loadInstallStatus(false);
+$('#btn-save-keys').onclick = async () => {
+  const r = await post('/api/save_keys', {hf_token: $('#hf-token').value.trim()});
+  $('#keys-msg').textContent = r.ok ? 'Saved.' : (r.error || 'error');
+};
+
+refreshStatus(); loadProjects(); loadInstallStatus(true);
 setInterval(pollEvents, 1000);
 setInterval(refreshStatus, 4000);
+setInterval(() => loadInstallStatus(false), 4000);
 </script>
