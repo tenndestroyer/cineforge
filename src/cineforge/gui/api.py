@@ -141,7 +141,8 @@ class GuiApi:
                 cmd = ["bash", str(self.cfg.repo_root / "setup.sh")]
             try:
                 proc = subprocess.Popen(cmd, cwd=str(self.cfg.repo_root), stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT, text=True, bufsize=1)
+                                        stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                                        errors="replace", bufsize=1)
                 for line in proc.stdout:  # stream installer output live into the events feed
                     line = line.rstrip()
                     if line.strip():
