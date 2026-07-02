@@ -114,9 +114,15 @@ def install_status(cfg: Config) -> dict:
     def add(key: str, label: str, ok: bool, detail: str, critical: bool = True) -> None:
         comps.append({"key": key, "label": label, "ok": bool(ok), "detail": detail, "critical": critical})
 
-    v = sys.version_info
-    add("python", "Python 3.10-3.12", (3, 10) <= (v.major, v.minor) <= (3, 12),
-        f"{v.major}.{v.minor}.{v.micro}", critical=False)
+    py_embed = (cfg.repo_root / "python_embeded" / "python.exe").is_file() or \
+        (cfg.repo_root / ".venv" / "bin" / "python").is_file()
+    if py_embed:
+        add("python", "Python 3.12 runtime", True, "bundled runtime provisioned", critical=False)
+    else:
+        v = sys.version_info
+        in_range = (3, 10) <= (v.major, v.minor) <= (3, 12)
+        add("python", "Python 3.12 runtime", in_range,
+            f"{v.major}.{v.minor}.{v.micro}" + ("" if in_range else " (Install provisions 3.12)"), critical=False)
 
     torch_ok, torch_detail = False, "not installed - run install"
     try:

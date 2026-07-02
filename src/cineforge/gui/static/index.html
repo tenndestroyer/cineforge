@@ -56,8 +56,8 @@
   <span id="s-run" class="pill" style="display:none">running</span>
 </header>
 <nav>
-  <button data-tab="setup">Setup</button>
-  <button data-tab="dash" class="active">Dashboard</button>
+  <button data-tab="setup" class="active">Setup</button>
+  <button data-tab="dash">Dashboard</button>
   <button data-tab="new">New Project</button>
   <button data-tab="models">Models</button>
   <button data-tab="projects">Projects</button>
@@ -68,7 +68,7 @@
     not rigged Pixar/Moonbug. Local open-source in 2026 has real limits; see docs/QUALITY_CEILING.md.
   </div>
 
-  <section id="tab-setup" style="display:none">
+  <section id="tab-setup">
     <div class="card">
       <h2>Setup &nbsp;<span id="ready-badge" class="pill">checking…</span></h2>
       <p class="muted">Cineforge installs everything it needs locally. Click <b>Install everything</b> to
@@ -92,7 +92,7 @@
     </div>
   </section>
 
-  <section id="tab-dash">
+  <section id="tab-dash" style="display:none">
     <div class="card">
       <h2>System</h2>
       <div id="sys" class="grid muted">loading…</div>
@@ -255,7 +255,7 @@ async function loadInstallStatus(autoswitch) {
     if (btn) { btn.disabled = !!st.installing;
                btn.textContent = st.installing ? 'Installing…' : (st.ready ? 'Reinstall / update' : 'Install everything'); }
     const h = $('#hf-token'); if (h && st.has_hf_token && !h.value) h.placeholder = 'hf_… (a token is already saved)';
-    if (autoswitch && !st.ready && !st.installing) selectTab('setup');
+    if (autoswitch && !st.ready) selectTab('setup');
   } catch(e){}
 }
 $('#btn-install').onclick = async () => { await post('/api/install', {}); selectTab('dash'); };
