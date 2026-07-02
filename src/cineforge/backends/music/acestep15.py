@@ -13,7 +13,7 @@ from ...errors import BackendError
 from ...models.registry import register
 from ..base import CAP_DURATION_CONTROL, CAP_INSTRUMENTAL, CAP_VOCALS, ComfyBackend, Result
 
-DEFAULT_CKPT = "all_in_one/ace_step_v1_3.5b.safetensors"
+DEFAULT_CKPT = "ace_step_v1_3.5b.safetensors"
 
 
 @register("acestep15", subsystem="music", license_id="acestep15")

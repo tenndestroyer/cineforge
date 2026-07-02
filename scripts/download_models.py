@@ -136,6 +136,12 @@ def main() -> int:
             failures.append(c.repo)
             continue
         _purge_repo_cache(c.repo)  # drop the cache duplicate to save disk
+        if (c.extra or {}).get("flatten"):
+            # move nested files (e.g. all_in_one/model.safetensors) up to the dest root
+            # so ComfyUI lists them without a subfolder (cross-platform loader name).
+            for nested in list(dest.rglob("*")):
+                if nested.is_file() and nested.parent != dest and not (dest / nested.name).exists():
+                    nested.rename(dest / nested.name)
         problems = _verify_weights(dest)
         if problems:
             for pr in problems:
