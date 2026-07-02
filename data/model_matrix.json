@@ -52,7 +52,7 @@
     },
     "music": {
       "tiers": {
-        "low": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "base-3.5B", "quant": "fp16", "repo": "ACE-Step/ACE-Step-v1-3.5B", "min_vram_gb": 6, "workflow": "acestep_base", "notes": "MIT. Vocals+instrumental, exact duration control, lyric tags."}},
+        "low": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "3.5B", "quant": "fp16", "repo": "Comfy-Org/ACE-Step_ComfyUI_repackaged", "min_vram_gb": 6, "workflow": "acestep", "extra": {"checkpoint": "all_in_one/ace_step_v1_3.5b.safetensors", "allow_patterns": ["all_in_one/ace_step_v1_3.5b.safetensors"], "comfy_subdir": "checkpoints"}, "notes": "WORKING native ComfyUI ACE-Step music (verified on GPU). Instrumental + vocals, duration control."}},
         "mid": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "XL-SFT", "quant": "int8", "repo": "ACE-Step/ACE-Step-v1-3.5B", "min_vram_gb": 16, "workflow": "acestep_xl", "notes": "XL-SFT with offload; XL-Turbo for auditions."}},
         "high": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "XL-SFT", "quant": "bf16", "repo": "ACE-Step/ACE-Step-v1-3.5B", "min_vram_gb": 20, "workflow": "acestep_xl", "notes": "Native no-offload, longest durations, max CFG."}}
       }
