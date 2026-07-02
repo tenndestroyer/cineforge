@@ -163,8 +163,11 @@ function Install-Ollama {
 function Fetch-Weights {
     Banner "Model weights (this is the big one)"
     if ($env:CINEFORGE_SKIP_WEIGHTS) { Warn "CINEFORGE_SKIP_WEIGHTS set -> skipping weight download."; return }
-    Info "Downloading all Safe-mode weights for your GPU tier (progress shown per file)..."
-    & $PyExe "$Root\scripts\download_models.py" --tier auto --license-mode safe --confirm
+    # Only fetch weights for stages that actually render today (currently: image).
+    # Other stages download when their render path is wired, to avoid pulling tens of
+    # GB of models that can't be used yet.
+    Info "Downloading weights for the wired render stages (image) ..."
+    & $PyExe "$Root\scripts\download_models.py" --tier auto --license-mode safe --confirm --only image
     if ($LASTEXITCODE -ne 0) { Warn "Some weights failed to download (see above). You can re-run setup to retry." }
     else { Ok "All Safe-mode weights downloaded + verified" }
 }

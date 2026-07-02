@@ -16,6 +16,10 @@ from .models.licenses import LicenseGate
 from .models.matrix import ModelMatrix
 from .models.registry import BackendRegistry
 
+# Subsystems whose render path is actually WIRED today (produces real output).
+# As each stage is wired, add it here so readiness/weights reflect reality.
+WIRED_SUBSYSTEMS = {"image"}
+
 
 def _check(name: str, ok: bool, detail: str) -> dict:
     return {"name": name, "ok": ok, "detail": detail}
@@ -155,6 +159,8 @@ def install_status(cfg: Config) -> dict:
     tier = cfg.tier_override or classify_vram(primary_gpu(detect_gpus()).vram_gb)
     needed, present = [], 0
     for sub in matrix.subsystems():
+        if sub not in WIRED_SUBSYSTEMS:
+            continue  # only require weights for stages that actually render today
         c = matrix.resolve(sub, tier, "safe")
         if not c.repo or c.repo.startswith("ollama:"):
             continue
@@ -170,7 +176,8 @@ def install_status(cfg: Config) -> dict:
         if found:
             present += 1
     total = len(needed)
-    add("weights", "Model weights", total > 0 and present == total, f"{present}/{total} downloaded (tier {tier})")
+    add("weights", "Model weights (wired stages)", total > 0 and present == total,
+        f"{present}/{total} ready ({', '.join(sorted(WIRED_SUBSYSTEMS))}; tier {tier})")
 
     ready = all(c["ok"] for c in comps if c["critical"])
     return {

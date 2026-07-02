@@ -68,8 +68,8 @@ fi
 
 # ---- 6. weights (size-verified) ----
 if [ -z "${CINEFORGE_SKIP_WEIGHTS:-}" ]; then
-  info "downloading default Safe-mode weights for your tier"
-  "$PY" "$ROOT/scripts/download_models.py" --tier auto --license-mode safe --confirm
+  info "downloading weights for the wired render stages (image)"
+  "$PY" "$ROOT/scripts/download_models.py" --tier auto --license-mode safe --confirm --only image
 else
   warn "CINEFORGE_SKIP_WEIGHTS set -> skipping weights"
 fi
