@@ -26,6 +26,11 @@ class ProducerAgent(Agent):
         p = ctx.project
         tier = ctx.tier
         render = dict(TIER_RENDER.get(tier, TIER_RENDER["mid"]))
+        # Apply user quality overrides from the GUI (resolution, steps, model, etc.).
+        override = p.render_plan.get("quality") or {}
+        for k in ("width", "height", "frames", "fps", "best_of_n", "steps", "cfg", "checkpoint"):
+            if override.get(k) is not None:
+                render[k] = override[k]
         p.render_plan["render"] = render
         p.render_plan["tier"] = tier
         p.render_plan["license_mode"] = ctx.license_mode

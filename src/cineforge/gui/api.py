@@ -163,6 +163,82 @@ class GuiApi:
             self._install_thread.start()
         return {"ok": True}
 
+    # ---- project settings / script editing ----
+    def update_settings(self, name: str, settings: dict) -> dict:
+        pdir = self.cfg.project_dir(name)
+        project = store.load(pdir)
+        rp = project.render_plan
+        if settings.get("target_shots") is not None:
+            rp["target_shots"] = max(1, int(settings["target_shots"]))
+        if settings.get("target_scenes") is not None:
+            rp["target_scenes"] = max(1, int(settings["target_scenes"]))
+        q = dict(rp.get("quality") or {})
+        for k in ("width", "height", "steps", "best_of_n"):
+            if settings.get(k) is not None:
+                q[k] = int(settings[k])
+        if settings.get("cfg") is not None:
+            q["cfg"] = float(settings["cfg"])
+        if settings.get("checkpoint"):
+            q["checkpoint"] = settings["checkpoint"]
+        rp["quality"] = q
+        store.save(project, pdir)
+        self.events.emit("info", "settings", f"updated settings for {name}")
+        return {"ok": True}
+
+    def update_script(self, name: str, shots: list) -> dict:
+        pdir = self.cfg.project_dir(name)
+        project = store.load(pdir)
+        by_id = {sh.id: sh for sh in project.all_shots()}
+        n = 0
+        for s in shots or []:
+            sh = by_id.get(s.get("id"))
+            if not sh:
+                continue
+            if s.get("keyframe_prompt") is not None:
+                sh.keyframe_prompt = s["keyframe_prompt"]
+            if s.get("description") is not None:
+                sh.description = s["description"]
+            n += 1
+        store.save(project, pdir)
+        self.events.emit("info", "script", f"updated {n} shot(s) for {name}")
+        return {"ok": True, "updated": n}
+
+    def rerender(self, name: str) -> dict:
+        """Re-render keyframes with the current prompts + settings, keeping the script."""
+        pdir = self.cfg.project_dir(name)
+        project = store.load(pdir)
+        for sh in project.all_shots():
+            sh.takes = [t for t in sh.takes if t.kind != "keyframe"]
+            sh.status = "pending"
+        project.stage = "storyboard"  # resume -> producing (applies settings) -> keyframes
+        store.save(project, pdir)
+        return self.start_run(name, resume=True)
+
+    def download_checkpoint(self, model: str) -> dict:
+        repos = {"sdxl": ("stabilityai/stable-diffusion-xl-base-1.0", "sd_xl_base_1.0.safetensors")}
+        if model not in repos:
+            return {"ok": False, "error": f"unknown model {model!r}"}
+        repo, fn = repos[model]
+
+        def _run() -> None:
+            self.events.emit("stage", "download", f"Downloading {model} ({fn}, several GB)...")
+            try:
+                from huggingface_hub import hf_hub_download
+
+                dest = self.cfg.comfy_dir / "models" / "checkpoints"
+                dest.mkdir(parents=True, exist_ok=True)
+                hf_hub_download(repo_id=repo, filename=fn, local_dir=str(dest), token=self.cfg.hf_token or None)
+                self.events.emit("info", "download", f"{model} ready — select it under Quality and Re-render.")
+            except Exception as e:  # noqa: BLE001
+                self.events.emit("error", "download", f"{type(e).__name__}: {e}")
+
+        with self._install_lock:
+            if self._install_thread and self._install_thread.is_alive():
+                return {"ok": False, "error": "a download/install is already running"}
+            self._install_thread = threading.Thread(target=_run, name=f"dl-{model}", daemon=True)
+            self._install_thread.start()
+        return {"ok": True}
+
     # ---- routing ----
     def handle(self, method: str, path: str, query: dict, body: dict | None) -> tuple[int, str, bytes]:
         try:
@@ -200,6 +276,14 @@ class GuiApi:
             return self.save_keys(body.get("hf_token", ""))
         if method == "POST" and path == "/api/install":
             return self.start_install()
+        if method == "POST" and path == "/api/project/settings":
+            return self.update_settings(body.get("name", ""), body.get("settings", {}))
+        if method == "POST" and path == "/api/project/script":
+            return self.update_script(body.get("name", ""), body.get("shots", []))
+        if method == "POST" and path == "/api/project/rerender":
+            return self.rerender(body.get("name", ""))
+        if method == "POST" and path == "/api/download_checkpoint":
+            return self.download_checkpoint(body.get("model", ""))
         raise FileNotFoundError(f"no route: {method} {path}")
 
 

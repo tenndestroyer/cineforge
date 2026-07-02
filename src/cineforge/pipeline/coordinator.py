@@ -234,7 +234,9 @@ class Coordinator:
                 prompt = shot.keyframe_prompt or shot.description
                 refs = [r for c in p.characters for r in c.reference_images]
                 req = ImageRequest(prompt=prompt, refs=refs,
-                                   width=render["width"], height=render["height"])
+                                   width=render["width"], height=render["height"],
+                                   steps=render.get("steps"), cfg=render.get("cfg"),
+                                   checkpoint=render.get("checkpoint"))
                 items.append((f"keyframe {shot.id}", req,
                               lambda res, sh=shot: add_take(sh, "keyframe", res)))
 

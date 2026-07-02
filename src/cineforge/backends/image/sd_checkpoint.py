@@ -33,19 +33,21 @@ class SDCheckpoint(ComfyBackend):
         return DEFAULT_CKPT
 
     def build_workflow(self, request: Any) -> dict:
-        ckpt = self._ckpt_name()
+        ckpt = getattr(request, "checkpoint", None) or self._ckpt_name()
         w = int(getattr(request, "width", 512) or 512)
         h = int(getattr(request, "height", 512) or 512)
         steps = int(getattr(request, "steps", None) or 20)
+        cfg = float(getattr(request, "cfg", None) or 7.0)
+        neg = getattr(request, "negative", None) or NEG_PROMPT
         seed = int(request.seed) if getattr(request, "seed", None) is not None else 42
         prompt = (getattr(request, "prompt", "") or "a scene").strip()
         return {
             "4": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": ckpt}},
             "5": {"class_type": "EmptyLatentImage", "inputs": {"width": w, "height": h, "batch_size": 1}},
             "6": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["4", 1]}},
-            "7": {"class_type": "CLIPTextEncode", "inputs": {"text": NEG_PROMPT, "clip": ["4", 1]}},
+            "7": {"class_type": "CLIPTextEncode", "inputs": {"text": neg, "clip": ["4", 1]}},
             "3": {"class_type": "KSampler", "inputs": {
-                "seed": seed, "steps": steps, "cfg": 7.0, "sampler_name": "euler",
+                "seed": seed, "steps": steps, "cfg": cfg, "sampler_name": "euler",
                 "scheduler": "normal", "denoise": 1.0,
                 "model": ["4", 0], "positive": ["6", 0], "negative": ["7", 0], "latent_image": ["5", 0]}},
             "8": {"class_type": "VAEDecode", "inputs": {"samples": ["3", 0], "vae": ["4", 2]}},

@@ -84,6 +84,9 @@ class ImageRequest:
     height: int = 1024
     seed: int | None = None
     steps: int | None = None
+    cfg: float | None = None
+    checkpoint: str | None = None     # per-render model override (e.g. an SDXL vs SD1.5 file)
+    negative: str | None = None       # negative prompt override
     draft: bool = False               # fast preview pass vs high-fidelity final
 
 
