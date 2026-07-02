@@ -21,8 +21,8 @@
     "image": {
       "tiers": {
         "low": {
-          "safe": {"model_id": "zimage", "license_id": "zimage", "variant": "Turbo", "quant": "fp16", "repo": "Tongyi-MAI/Z-Image-Turbo", "min_vram_gb": 8, "workflow": "zimage_turbo", "notes": "#1 open-weights on arena; fast draft + final."},
-          "best": {"model_id": "flux2", "license_id": "flux2", "variant": "klein-4B", "quant": "gguf-q4", "repo": "black-forest-labs/FLUX.2-klein", "min_vram_gb": 12, "workflow": "flux2_klein", "notes": "Non-commercial; strong multi-reference character sheets."}
+          "safe": {"model_id": "sd_checkpoint", "license_id": "sd15", "variant": "SD1.5", "quant": "fp16", "repo": "Comfy-Org/stable-diffusion-v1-5-archive", "min_vram_gb": 4, "workflow": "sd_checkpoint", "extra": {"checkpoint": "v1-5-pruned-emaonly-fp16.safetensors", "allow_patterns": ["v1-5-pruned-emaonly-fp16.safetensors"], "comfy_subdir": "checkpoints"}, "notes": "FIRST PROVEN render path (verified rendering on GPU). Upgrade to Z-Image via Research mode."},
+          "best": {"model_id": "zimage", "license_id": "zimage", "variant": "Turbo", "quant": "fp16", "repo": "Tongyi-MAI/Z-Image-Turbo", "min_vram_gb": 8, "workflow": "zimage_turbo", "notes": "Higher-quality upgrade (native ComfyUI Z-Image); wiring in progress."}
         },
         "mid": {
           "safe": {"model_id": "zimage", "license_id": "zimage", "variant": "Base", "quant": "fp16", "repo": "Tongyi-MAI/Z-Image", "min_vram_gb": 16, "workflow": "zimage_base", "notes": "High-fidelity final pass."},

@@ -159,8 +159,15 @@ def install_status(cfg: Config) -> dict:
         if not c.repo or c.repo.startswith("ollama:"):
             continue
         needed.append(sub)
-        d = cfg.models_dir / sub / c.model_id
-        if d.is_dir() and any(d.iterdir()):
+        comfy_subdir = (c.extra or {}).get("comfy_subdir")
+        if comfy_subdir:
+            d = cfg.comfy_dir / "models" / comfy_subdir
+            ckpt = (c.extra or {}).get("checkpoint")
+            found = (d / ckpt).is_file() if ckpt else (d.is_dir() and any(d.iterdir()))
+        else:
+            d = cfg.models_dir / sub / c.model_id
+            found = d.is_dir() and any(d.iterdir())
+        if found:
             present += 1
     total = len(needed)
     add("weights", "Model weights", total > 0 and present == total, f"{present}/{total} downloaded (tier {tier})")

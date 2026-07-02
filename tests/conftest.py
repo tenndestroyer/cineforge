@@ -13,8 +13,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def cfg(tmp_path) -> Config:
-    """Real repo data/ (so matrix + licenses load) but an isolated tmp home."""
+    """Real repo data/ (so matrix + licenses load) but an isolated tmp home.
+
+    comfy_url/ollama_url point at dead ports so tests are deterministic even when a
+    real ComfyUI/Ollama happens to be running on the dev machine (otherwise a
+    generation stage would actually render against it)."""
     c = Config(repo_root=REPO_ROOT, home=tmp_path / "CineforgeData")
+    c.comfy_url = "http://127.0.0.1:59571"
+    c.ollama_url = "http://127.0.0.1:59572"
     c.ensure_dirs()
     return c
 

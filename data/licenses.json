@@ -6,6 +6,7 @@
     "ltx23": {"license": "Lightricks Open Weights", "safe": false, "commercial": true, "arr_cap": "$10M ARR", "requires_ack": true, "notes": "Free for research and for companies under $10M ARR; above that needs a paid Lightricks license (2x liquidated damages clause). NOT Apache despite some blogs. Also needs gated google/gemma-3-12b-it text encoder."},
     "hunyuanvideo15": {"license": "Tencent Hunyuan Community", "safe": false, "commercial": true, "mau_cap": "100M MAU", "excluded_territories": ["EU", "UK", "KR"], "requires_ack": true, "notes": "Source-available with conditions; excludes EU/UK/South Korea entirely."},
     "zimage": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "#1 open-weights image model on arena as of mid-2026."},
+    "sd15": {"license": "CreativeML OpenRAIL-M", "safe": true, "commercial": true, "notes": "Stable Diffusion 1.5 — the first proven render path (verified on GPU). Open, broadly usable."},
     "flux2": {"license": "FLUX.2-dev Non-Commercial", "safe": false, "commercial": false, "non_commercial": true, "requires_ack": true, "notes": "Research/non-commercial only. Gated repo (needs HF_TOKEN)."},
     "qwen_image_edit": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Multi-reference identity lock; license-safe consistency engine."},
     "chatterbox": {"license": "MIT", "safe": true, "commercial": true, "watermark": "PerTh (inaudible)", "notes": "Embeds an inaudible Perth watermark in output — disclosed, not a block."},

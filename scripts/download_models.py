@@ -115,7 +115,10 @@ def main() -> int:
     failures = []
     total = len(plan)
     for i, (sub, c) in enumerate(plan, 1):
-        dest = cfg.models_dir / sub / c.model_id
+        # Models with a comfy_subdir go straight into ComfyUI/models/<subdir> (where
+        # ComfyUI's loaders look); everything else lands in models_store/<sub>/<id>.
+        comfy_subdir = (c.extra or {}).get("comfy_subdir")
+        dest = (cfg.comfy_dir / "models" / comfy_subdir) if comfy_subdir else (cfg.models_dir / sub / c.model_id)
         print(f"\n[{i}/{total}] {sub}: {c.repo}\n    -> {dest}", flush=True)
         patterns = _allow_patterns(c)
         if patterns:
