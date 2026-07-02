@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cineforge"
+version = "0.1.0"
+description = "A fully-local, fully-offline, open-source AI animated-video studio. ViMax's agentic director's brain wired to the best 2026 open-weight local models, auto-tuned to your GPU."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Cineforge contributors" }]
+keywords = ["ai", "video", "animation", "local", "offline", "comfyui", "agents"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+]
+
+# NOTE: torch / torchvision are intentionally NOT listed here. They are installed
+# per-hardware-backend by setup.ps1 / setup.sh (cu128 stable, cu128/cu129 nightly
+# for Blackwell sm_120, ROCm wheels for AMD, or torch-directml as a last resort).
+# Pinning them here would install the wrong wheel for most users.
+dependencies = [
+    "huggingface-hub>=0.25",
+    "requests>=2.31",
+    "jinja2>=3.1",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+cineforge = "cineforge.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/YOURNAME/cineforge"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

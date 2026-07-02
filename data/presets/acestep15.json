@@ -1,0 +1,9 @@
+{
+  "_comment": "Sampler preset for ACE-Step 1.5 music generation.",
+  "model": "acestep15",
+  "variant": "base",
+  "cfg": 4.0,
+  "steps": 27,
+  "scheduler": "euler",
+  "guidance_interval": 0.5
+}

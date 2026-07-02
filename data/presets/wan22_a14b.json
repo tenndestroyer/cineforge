@@ -1,0 +1,9 @@
+{
+  "_comment": "Sampler preset for Wan 2.2 A14B (MoE). Verify against the current model card.",
+  "model": "wan22",
+  "variant": "A14B",
+  "cfg": 5.0,
+  "steps": 30,
+  "scheduler": "unipc",
+  "shift": 5.0
+}

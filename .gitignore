@@ -1,0 +1,53 @@
+# --- Cineforge .gitignore ---
+# GOTCHA (learned the hard way on a prior project): a bare `_*.py` pattern
+# silently ignores EVERY __init__.py. Do NOT add one. If you must ignore
+# leading-underscore scratch files, re-include init files explicitly:
+#   _scratch_*.py
+#   !**/__init__.py
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Secrets — NEVER commit
+keys.env
+
+# Local install state + heavy artifacts (downloaded by setup, never committed)
+.installed
+.installing
+python_embeded/
+ComfyUI/
+models_store/
+BernieStudioData/
+CineforgeData/
+projects/
+scratch/
+*.safetensors
+*.gguf
+*.ckpt
+*.pth
+*.onnx
+*.mp4
+*.wav
+*.mp3
+*.png
+*.jpg
+# keep small doc/demo assets if explicitly force-added
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Test/coverage
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage

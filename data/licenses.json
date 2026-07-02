@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "_comment": "Machine-checkable license terms per model. 'safe': usable by a typical non-enterprise user under a permissive (Apache/MIT/community-under-cap) license -> allowed in Safe mode. Non-safe models are blocked in Safe mode and require explicit consent in Research mode. 'excluded_territories' is an absolute block for that territory. Verify against each model's actual LICENSE before commercial use; see docs/LICENSES.md.",
+  "models": {
+    "wan22": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Fully unrestricted; largest 3rd-party LoRA ecosystem."},
+    "ltx23": {"license": "Lightricks Open Weights", "safe": false, "commercial": true, "arr_cap": "$10M ARR", "requires_ack": true, "notes": "Free for research and for companies under $10M ARR; above that needs a paid Lightricks license (2x liquidated damages clause). NOT Apache despite some blogs. Also needs gated google/gemma-3-12b-it text encoder."},
+    "hunyuanvideo15": {"license": "Tencent Hunyuan Community", "safe": false, "commercial": true, "mau_cap": "100M MAU", "excluded_territories": ["EU", "UK", "KR"], "requires_ack": true, "notes": "Source-available with conditions; excludes EU/UK/South Korea entirely."},
+    "zimage": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "#1 open-weights image model on arena as of mid-2026."},
+    "flux2": {"license": "FLUX.2-dev Non-Commercial", "safe": false, "commercial": false, "non_commercial": true, "requires_ack": true, "notes": "Research/non-commercial only. Gated repo (needs HF_TOKEN)."},
+    "qwen_image_edit": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Multi-reference identity lock; license-safe consistency engine."},
+    "chatterbox": {"license": "MIT", "safe": true, "commercial": true, "watermark": "PerTh (inaudible)", "notes": "Embeds an inaudible Perth watermark in output — disclosed, not a block."},
+    "indextts2": {"license": "bilibili Index", "safe": false, "commercial": false, "non_commercial": true, "mau_cap": "100M MAU / RMB1B", "requires_ack": true, "notes": "Non-commercial without written authorization."},
+    "higgs2": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Hero-character cloning; needs 18-24GB for cloning."},
+    "cosyvoice3": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Dialect / cross-lingual voices."},
+    "kokoro": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "No-clone narration; CPU-capable."},
+    "acestep15": {"license": "MIT", "safe": true, "commercial": true, "notes": "Vocals + instrumental; exact duration control."},
+    "heartmula": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Music runner-up / A-B second opinion."},
+    "echomimic3": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Default lipsync; stylized-capable."},
+    "infinitetalk": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Stronger stylized/anime lipsync claim; larger (14B)."},
+    "latentsync": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Photoreal-only fallback (fails face-detect on cartoons)."},
+    "musetalk": {"license": "MIT", "safe": true, "commercial": true, "notes": "VRAM-floor photoreal fallback (4GB)."},
+    "hunyuan_foley": {"license": "Tencent HunyuanVideo-Foley", "safe": false, "commercial": true, "mau_cap": "100M MAU", "excluded_territories": ["EU", "UK", "KR"], "requires_ack": true, "notes": "Video-conditioned foley; excludes EU/UK/South Korea."},
+    "stable_audio_open": {"license": "Stability AI Community", "safe": true, "commercial": true, "arr_cap": "$1M ARR", "notes": "Free for individuals and businesses under $1M annual revenue; above that needs a Stability enterprise license."},
+    "seedvr2": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Upscale/restore; GGUF via cmeka."},
+    "flashvsr": {"license": "Apache-2.0", "safe": true, "commercial": true, "notes": "Long-footage upscaler."},
+    "rife": {"license": "MIT", "safe": true, "commercial": true, "notes": "Practical-RIFE (cite hzwer). Frame interpolation."},
+    "gmfss_union": {"license": "MIT", "safe": true, "commercial": true, "notes": "Anime-tuned frame interpolation."},
+    "ffmpeg_master": {"license": "LGPL/GPL (ffmpeg)", "safe": true, "commercial": true, "notes": "A tool, not a model. Standard ffmpeg licensing applies to the binary."},
+    "ollama": {"license": "varies by model", "safe": true, "commercial": true, "notes": "The Qwen/Llama weights pulled by Ollama carry their own licenses; default picks (Qwen2.5) are commercially usable."},
+    "vlm": {"license": "varies by model", "safe": true, "commercial": true, "notes": "Local VLM judge (Qwen2-VL/LLaVA)."}
+  }
+}

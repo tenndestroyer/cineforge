@@ -1,0 +1,216 @@
+<!-- Cineforge GUI — single self-contained offline page. No CDN, no build, no telemetry. -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cineforge</title>
+<style>
+  :root { --bg:#0f1216; --panel:#171c23; --panel2:#1e242d; --line:#2a323d; --fg:#e6edf3;
+          --muted:#9aa7b4; --accent:#6ea8fe; --warn:#e0a458; --err:#e06c75; --ok:#7ec699; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid var(--line); display:flex; gap:16px;
+           align-items:center; background:var(--panel); position:sticky; top:0; z-index:5; }
+  header h1 { font-size:18px; margin:0; letter-spacing:.5px; }
+  header h1 span { color:var(--accent); }
+  .pill { font-size:12px; color:var(--muted); background:var(--panel2); border:1px solid var(--line);
+          border-radius:20px; padding:3px 10px; }
+  .pill.run { color:var(--ok); border-color:var(--ok); }
+  nav { display:flex; gap:4px; padding:10px 20px 0; }
+  nav button { background:none; border:none; color:var(--muted); padding:8px 14px; cursor:pointer;
+               border-bottom:2px solid transparent; font-size:14px; }
+  nav button.active { color:var(--fg); border-bottom-color:var(--accent); }
+  main { padding:18px 20px 60px; max-width:1000px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .card h2 { margin:0 0 10px; font-size:15px; }
+  .banner { background:#241d13; border:1px solid var(--warn); color:#f0d3a8; border-radius:10px;
+            padding:10px 14px; margin-bottom:16px; font-size:13px; }
+  .grid { display:grid; grid-template-columns:auto 1fr; gap:6px 16px; font-size:13px; }
+  .grid b { color:var(--muted); font-weight:500; }
+  label { display:block; margin:10px 0 4px; color:var(--muted); font-size:13px; }
+  input, textarea, select { width:100%; background:var(--panel2); border:1px solid var(--line);
+        color:var(--fg); border-radius:8px; padding:9px 11px; font:inherit; }
+  textarea { min-height:80px; resize:vertical; }
+  button.act { background:var(--accent); color:#0b0f14; border:none; border-radius:8px;
+        padding:9px 16px; font-weight:600; cursor:pointer; margin-top:12px; }
+  button.ghost { background:var(--panel2); color:var(--fg); border:1px solid var(--line);
+        border-radius:8px; padding:7px 13px; cursor:pointer; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:500; }
+  .feed { max-height:340px; overflow:auto; font:12px/1.6 ui-monospace,Menlo,Consolas,monospace; }
+  .feed .warn { color:var(--warn); } .feed .error { color:var(--err); } .feed .stage { color:var(--accent); }
+  .bar { height:8px; background:var(--panel2); border-radius:6px; overflow:hidden; margin:6px 0 2px; }
+  .bar > div { height:100%; background:var(--accent); width:0; transition:width .3s; }
+  .muted { color:var(--muted); }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .proj { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); }
+  pre { white-space:pre-wrap; background:var(--panel2); padding:12px; border-radius:8px; font:12px/1.5 ui-monospace,monospace; max-height:360px; overflow:auto; }
+</style>
+
+<header>
+  <h1>Cine<span>forge</span></h1>
+  <span id="s-gpu" class="pill">detecting…</span>
+  <span id="s-tier" class="pill"></span>
+  <span id="s-lic" class="pill"></span>
+  <span id="s-run" class="pill" style="display:none">running</span>
+</header>
+<nav>
+  <button data-tab="dash" class="active">Dashboard</button>
+  <button data-tab="new">New Project</button>
+  <button data-tab="models">Models</button>
+  <button data-tab="projects">Projects</button>
+</nav>
+<main>
+  <div class="banner">
+    <b>Honest ceiling:</b> Cineforge makes a polished, character-consistent <i>stylized</i> AI short —
+    not rigged Pixar/Moonbug. Local open-source in 2026 has real limits; see docs/QUALITY_CEILING.md.
+  </div>
+
+  <section id="tab-dash">
+    <div class="card">
+      <h2>System</h2>
+      <div id="sys" class="grid muted">loading…</div>
+      <div id="warns"></div>
+    </div>
+    <div class="card">
+      <h2>Run progress</h2>
+      <div class="bar"><div id="prog"></div></div>
+      <div id="prog-label" class="muted">idle</div>
+    </div>
+    <div class="card">
+      <h2>Activity</h2>
+      <div id="feed" class="feed muted">No activity yet. Create a project and run it.</div>
+    </div>
+  </section>
+
+  <section id="tab-new" style="display:none">
+    <div class="card">
+      <h2>New project</h2>
+      <label>Idea / logline</label>
+      <textarea id="idea" placeholder="a brave little robot who learns to garden with a grumpy snail"></textarea>
+      <label>Project name (optional)</label>
+      <input id="name" placeholder="auto from idea" />
+      <label>Style</label>
+      <input id="style" value="stylized 3D cartoon" />
+      <button class="act" id="create">Create project</button>
+      <div id="new-msg" class="muted" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section id="tab-models" style="display:none">
+    <div class="card">
+      <h2>Model matrix for your GPU</h2>
+      <div id="models-info" class="muted"></div>
+      <table><thead><tr><th>Subsystem</th><th>Model</th><th>Variant</th><th>Quant</th><th>Min VRAM</th><th>License</th></tr></thead>
+      <tbody id="models-body"></tbody></table>
+    </div>
+  </section>
+
+  <section id="tab-projects" style="display:none">
+    <div class="card">
+      <h2>Projects</h2>
+      <div id="proj-list" class="muted">none yet</div>
+    </div>
+    <div class="card" id="proj-detail" style="display:none">
+      <h2 id="pd-name"></h2>
+      <div class="row">
+        <button class="ghost" id="pd-run">Run</button>
+        <button class="ghost" id="pd-resume">Resume</button>
+        <span id="pd-stage" class="muted"></span>
+      </div>
+      <pre id="pd-body"></pre>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = async (p, opts) => (await fetch(p, opts)).json();
+const post = (p, body) => api(p, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})});
+let lastSeq = 0, curProject = null;
+
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  ['dash','new','models','projects'].forEach(t => $('#tab-'+t).style.display = (t===b.dataset.tab?'block':'none'));
+  if (b.dataset.tab==='models') loadModels();
+  if (b.dataset.tab==='projects') loadProjects();
+});
+
+async function refreshStatus() {
+  try {
+    const s = await api('/api/status');
+    $('#s-gpu').textContent = s.gpu.name + ' · ' + s.gpu.vram_gb + 'GB';
+    $('#s-tier').textContent = 'tier: ' + s.tier;
+    $('#s-lic').textContent = s.license_mode + ' mode';
+    $('#s-run').style.display = s.running ? '' : 'none';
+    $('#s-run').className = 'pill run';
+    $('#sys').innerHTML = [
+      ['GPU', s.gpu.name+' ('+s.gpu.vendor+', '+s.gpu.vram_gb+' GB)'],
+      ['Tier', s.tier], ['Runtime', s.runtime+' / '+s.torch_channel], ['Quant', s.quant],
+      ['License mode', s.license_mode], ['Projects', s.projects.length]
+    ].map(([k,v])=>`<b>${k}</b><span>${v}</span>`).join('');
+    $('#warns').innerHTML = (s.warnings||[]).map(w=>`<div class="banner" style="margin-top:10px">${w}</div>`).join('');
+  } catch(e){}
+}
+
+async function pollEvents() {
+  try {
+    const {events} = await api('/api/events?since='+lastSeq);
+    const feed = $('#feed');
+    if (events.length && feed.classList.contains('muted')) { feed.classList.remove('muted'); feed.innerHTML=''; }
+    for (const ev of events) {
+      lastSeq = ev.seq;
+      const div = document.createElement('div');
+      div.className = ev.kind;
+      div.textContent = `[${ev.stage}] ${ev.message}`;
+      feed.appendChild(div);
+      if (ev.pct != null) { $('#prog').style.width = ev.pct+'%'; $('#prog-label').textContent = ev.stage+' — '+ev.pct+'%'; }
+      if (ev.stage==='done') { $('#prog').style.width='100%'; $('#prog-label').textContent='complete'; }
+    }
+    feed.scrollTop = feed.scrollHeight;
+  } catch(e){}
+}
+
+async function loadModels() {
+  const m = await api('/api/models');
+  $('#models-info').textContent = `tier ${m.tier} · ${m.license_mode} mode`;
+  $('#models-body').innerHTML = Object.entries(m.subsystems).map(([sub,c]) =>
+    `<tr><td>${sub}</td><td>${c.model}</td><td>${c.variant||'—'}</td><td>${c.quant||'—'}</td><td>${c.min_vram_gb||'?'} GB</td><td>${c.license}</td></tr>`
+  ).join('');
+}
+
+async function loadProjects() {
+  const {projects} = await api('/api/projects');
+  $('#proj-list').innerHTML = projects.length ? projects.map(n =>
+    `<div class="proj"><span>${n}</span><button class="ghost" onclick="openProject('${n}')">Open</button></div>`
+  ).join('') : 'No projects yet — create one under New Project.';
+}
+
+async function openProject(name) {
+  curProject = name;
+  const p = await api('/api/project?name='+encodeURIComponent(name));
+  $('#proj-detail').style.display='block';
+  $('#pd-name').textContent = name;
+  $('#pd-stage').textContent = 'last stage: ' + (p.stage||'—');
+  const shots = (p.scenes||[]).reduce((a,s)=>a+(s.shots||[]).length,0);
+  $('#pd-body').textContent =
+    `logline: ${p.logline||'(not written yet — run the pipeline)'}\n` +
+    `style: ${p.style}\nscenes: ${(p.scenes||[]).length}  shots: ${shots}  characters: ${(p.characters||[]).length}\n` +
+    (p.render_plan && p.render_plan.eta_total_minutes ? `est. render: ~${p.render_plan.eta_total_minutes} min\n` : '') +
+    `\n--- script ---\n${p.script||'(none)'}`;
+}
+
+$('#create').onclick = async () => {
+  const idea = $('#idea').value.trim();
+  if (!idea) { $('#new-msg').textContent='Enter an idea first.'; return; }
+  const r = await post('/api/new', {idea, name:$('#name').value.trim(), style:$('#style').value});
+  $('#new-msg').textContent = r.name ? `Created "${r.name}". Open it under Projects to run.` : (r.error||'error');
+};
+$('#pd-run').onclick = () => curProject && post('/api/run', {name:curProject});
+$('#pd-resume').onclick = () => curProject && post('/api/run', {name:curProject, resume:true});
+
+refreshStatus(); loadProjects();
+setInterval(pollEvents, 1000);
+setInterval(refreshStatus, 4000);
+</script>

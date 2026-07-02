@@ -1,0 +1,17 @@
+# Cineforge Python dependencies (the orchestration layer only).
+#
+# IMPORTANT: torch / torchvision / torchaudio are installed SEPARATELY by
+# setup.ps1 / setup.sh on the correct hardware backend. Do not add them here.
+#
+# Heavy model inference runs inside a local ComfyUI instance (cloned by setup),
+# so model-specific packages (diffusers custom nodes, etc.) live in ComfyUI,
+# not in this file.
+
+huggingface-hub>=0.25
+requests>=2.31
+jinja2>=3.1
+numpy>=1.26
+
+# Dev / test (installed with the [dev] extra or directly in CI)
+# pytest>=8
+# ruff>=0.5

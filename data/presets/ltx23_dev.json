@@ -1,0 +1,10 @@
+{
+  "_comment": "Sampler preset for LTX-2.3 dev. CFG/steps are NON-transferable across model versions (LTX-2 was ~6.5/30). Verify against the current model card.",
+  "model": "ltx23",
+  "variant": "dev",
+  "cfg": 5.5,
+  "steps": 24,
+  "scheduler": "normal",
+  "shift": 3.0,
+  "audio_guidance_scale": 2.0
+}

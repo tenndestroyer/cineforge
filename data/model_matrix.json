@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "_comment": "Maps (subsystem x vram-tier x license_mode) -> a concrete model. 'safe' = Apache/MIT-only default; 'best' = a higher-quality but license-gated pick unlocked only in Research mode. Edit this file to adopt new models WITHOUT a code release; then pin the new revision. REPO IDS ARE BEST-EFFORT as of mid-2026 and MUST be verified before first download (the size-verified downloader will reject a wrong/gated pull). See docs/MODELS.md.",
+  "subsystems": {
+    "video": {
+      "tiers": {
+        "low": {
+          "safe": {"model_id": "wan22", "license_id": "wan22", "variant": "TI2V-5B", "quant": "fp8", "repo": "Wan-AI/Wan2.2-TI2V-5B", "min_vram_gb": 8, "workflow": "wan22_ti2v", "notes": "Only top-3 model native on 8GB without GGUF."},
+          "best": {"model_id": "ltx23", "license_id": "ltx23", "variant": "distilled", "quant": "gguf-q4", "repo": "unsloth/LTX-2.3-GGUF", "min_vram_gb": 8, "workflow": "ltx23_distilled", "notes": "480p, native audio; revenue-gated license."}
+        },
+        "mid": {
+          "safe": {"model_id": "wan22", "license_id": "wan22", "variant": "I2V-A14B", "quant": "fp8", "repo": "Wan-AI/Wan2.2-I2V-A14B", "min_vram_gb": 16, "workflow": "wan22_i2v", "notes": "Default photoreal/human. I2V off a locked keyframe = primary consistency path."},
+          "best": {"model_id": "ltx23", "license_id": "ltx23", "variant": "dev", "quant": "fp8", "repo": "Lightricks/LTX-2.3", "min_vram_gb": 24, "workflow": "ltx23_dev", "notes": "720-1080p native synced audio+dialogue+lipsync in one pass."}
+        },
+        "high": {
+          "safe": {"model_id": "wan22", "license_id": "wan22", "variant": "A14B", "quant": "bf16", "repo": "Wan-AI/Wan2.2-I2V-A14B", "min_vram_gb": 32, "workflow": "wan22_i2v", "notes": "Both MoE experts resident."},
+          "best": {"model_id": "ltx23", "license_id": "ltx23", "variant": "dev", "quant": "bf16", "repo": "Lightricks/LTX-2.3", "min_vram_gb": 32, "workflow": "ltx23_dev", "notes": "Native 4K@50fps or 1080p+2x latent upscale."}
+        }
+      }
+    },
+    "image": {
+      "tiers": {
+        "low": {
+          "safe": {"model_id": "zimage", "license_id": "zimage", "variant": "Turbo", "quant": "fp16", "repo": "Tongyi-MAI/Z-Image-Turbo", "min_vram_gb": 8, "workflow": "zimage_turbo", "notes": "#1 open-weights on arena; fast draft + final."},
+          "best": {"model_id": "flux2", "license_id": "flux2", "variant": "klein-4B", "quant": "gguf-q4", "repo": "black-forest-labs/FLUX.2-klein", "min_vram_gb": 12, "workflow": "flux2_klein", "notes": "Non-commercial; strong multi-reference character sheets."}
+        },
+        "mid": {
+          "safe": {"model_id": "zimage", "license_id": "zimage", "variant": "Base", "quant": "fp16", "repo": "Tongyi-MAI/Z-Image", "min_vram_gb": 16, "workflow": "zimage_base", "notes": "High-fidelity final pass."},
+          "best": {"model_id": "flux2", "license_id": "flux2", "variant": "dev", "quant": "gguf-q5", "repo": "black-forest-labs/FLUX.2-dev", "min_vram_gb": 16, "workflow": "flux2_dev", "notes": "Best multi-ref identity lock (non-commercial)."}
+        },
+        "high": {
+          "safe": {"model_id": "zimage", "license_id": "zimage", "variant": "Base", "quant": "bf16", "repo": "Tongyi-MAI/Z-Image", "min_vram_gb": 24, "workflow": "zimage_base", "notes": "Pair with qwen_image_edit for identity lock."},
+          "best": {"model_id": "flux2", "license_id": "flux2", "variant": "dev", "quant": "fp8", "repo": "black-forest-labs/FLUX.2-dev", "min_vram_gb": 32, "workflow": "flux2_dev", "notes": "Non-commercial."}
+        }
+      }
+    },
+    "voice": {
+      "tiers": {
+        "low": {
+          "safe": {"model_id": "chatterbox", "license_id": "chatterbox", "variant": "multilingual-v3", "quant": "fp16", "repo": "ResembleAI/chatterbox", "min_vram_gb": 6, "workflow": "", "notes": "MIT, 25 langs, emotion sliders. Embeds inaudible PerTh watermark (disclosed)."},
+          "best": {"model_id": "indextts2", "license_id": "indextts2", "variant": "", "quant": "fp16", "repo": "IndexTeam/IndexTTS-2", "min_vram_gb": 8, "workflow": "", "notes": "Max emotion + duration control; bilibili non-commercial terms."}
+        },
+        "mid": {
+          "safe": {"model_id": "chatterbox", "license_id": "chatterbox", "variant": "multilingual-v3", "quant": "fp16", "repo": "ResembleAI/chatterbox", "min_vram_gb": 8, "workflow": "", "notes": "Run concurrently with CosyVoice3 for multi-character casts."},
+          "best": {"model_id": "indextts2", "license_id": "indextts2", "variant": "", "quant": "fp16", "repo": "IndexTeam/IndexTTS-2", "min_vram_gb": 12, "workflow": "", "notes": "Ideal for dub/lipsync duration control."}
+        },
+        "high": {
+          "safe": {"model_id": "higgs2", "license_id": "higgs2", "variant": "v2", "quant": "bf16", "repo": "bosonai/higgs-audio-v2-generation-3B-base", "min_vram_gb": 24, "workflow": "", "notes": "Apache-2.0 hero-character cloning; needs 18-24GB."},
+          "best": {"model_id": "indextts2", "license_id": "indextts2", "variant": "", "quant": "bf16", "repo": "IndexTeam/IndexTTS-2", "min_vram_gb": 16, "workflow": "", "notes": "Parallel per-character best-of-N."}
+        }
+      }
+    },
+    "music": {
+      "tiers": {
+        "low": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "base-3.5B", "quant": "fp16", "repo": "ACE-Step/ACE-Step-v1-3.5B", "min_vram_gb": 6, "workflow": "acestep_base", "notes": "MIT. Vocals+instrumental, exact duration control, lyric tags."}},
+        "mid": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "XL-SFT", "quant": "int8", "repo": "ACE-Step/ACE-Step-v1-3.5B", "min_vram_gb": 16, "workflow": "acestep_xl", "notes": "XL-SFT with offload; XL-Turbo for auditions."}},
+        "high": {"safe": {"model_id": "acestep15", "license_id": "acestep15", "variant": "XL-SFT", "quant": "bf16", "repo": "ACE-Step/ACE-Step-v1-3.5B", "min_vram_gb": 20, "workflow": "acestep_xl", "notes": "Native no-offload, longest durations, max CFG."}}
+      }
+    },
+    "lipsync": {
+      "tiers": {
+        "low": {
+          "safe": {"model_id": "echomimic3", "license_id": "echomimic3", "variant": "Flash", "quant": "fp8", "repo": "BadToBest/EchoMimicV3", "min_vram_gb": 7, "workflow": "echomimic_flash", "notes": "Apache-2.0, 768x512, stylized-capable; audio_guidance 1.8-2.0."},
+          "best": {"model_id": "infinitetalk", "license_id": "infinitetalk", "variant": "gguf-q4", "quant": "gguf-q4", "repo": "MeiGen-AI/InfiniteTalk", "min_vram_gb": 10, "workflow": "infinitetalk", "notes": "Stronger anime/stylized claim; Apache-2.0."}
+        },
+        "mid": {
+          "safe": {"model_id": "echomimic3", "license_id": "echomimic3", "variant": "standard", "quant": "fp16", "repo": "BadToBest/EchoMimicV3", "min_vram_gb": 16, "workflow": "echomimic", "notes": "Up to 768x768."},
+          "best": {"model_id": "infinitetalk", "license_id": "infinitetalk", "variant": "", "quant": "fp16", "repo": "MeiGen-AI/InfiniteTalk", "min_vram_gb": 16, "workflow": "infinitetalk", "notes": "Stylized hero shots."}
+        },
+        "high": {
+          "safe": {"model_id": "echomimic3", "license_id": "echomimic3", "variant": "full", "quant": "bf16", "repo": "BadToBest/EchoMimicV3", "min_vram_gb": 24, "workflow": "echomimic", "notes": "+ face-restore + RIFE in one budget."},
+          "best": {"model_id": "infinitetalk", "license_id": "infinitetalk", "variant": "14B", "quant": "bf16", "repo": "MeiGen-AI/InfiniteTalk", "min_vram_gb": 24, "workflow": "infinitetalk", "notes": "14B native stylized."}
+        }
+      }
+    },
+    "sfx": {
+      "tiers": {
+        "low": {
+          "safe": {"model_id": "stable_audio_open", "license_id": "stable_audio_open", "variant": "small", "quant": "fp16", "repo": "stabilityai/stable-audio-open-small", "min_vram_gb": 4, "workflow": "stable_audio", "notes": "Text-to-ambience beds. Free under $1M rev (Stability Community License)."},
+          "best": {"model_id": "hunyuan_foley", "license_id": "hunyuan_foley", "variant": "XL", "quant": "fp8", "repo": "tencent/HunyuanVideo-Foley", "min_vram_gb": 8, "workflow": "hunyuan_foley", "notes": "V2A foley synced to picture; excludes EU/UK/KR."}
+        },
+        "mid": {
+          "safe": {"model_id": "stable_audio_open", "license_id": "stable_audio_open", "variant": "small", "quant": "fp16", "repo": "stabilityai/stable-audio-open-small", "min_vram_gb": 4, "workflow": "stable_audio", "notes": "Ambience layer, mixed under foley."},
+          "best": {"model_id": "hunyuan_foley", "license_id": "hunyuan_foley", "variant": "XL", "quant": "fp16", "repo": "tencent/HunyuanVideo-Foley", "min_vram_gb": 16, "workflow": "hunyuan_foley", "notes": "48kHz stereo, video-conditioned."}
+        },
+        "high": {
+          "safe": {"model_id": "stable_audio_open", "license_id": "stable_audio_open", "variant": "small", "quant": "fp16", "repo": "stabilityai/stable-audio-open-small", "min_vram_gb": 4, "workflow": "stable_audio", "notes": "Ambience beds."},
+          "best": {"model_id": "hunyuan_foley", "license_id": "hunyuan_foley", "variant": "XXL", "quant": "fp16", "repo": "tencent/HunyuanVideo-Foley", "min_vram_gb": 20, "workflow": "hunyuan_foley", "notes": "XXL no-offload, concurrent with video model."}
+        }
+      }
+    },
+    "enhance": {
+      "tiers": {
+        "low": {"safe": {"model_id": "seedvr2", "license_id": "seedvr2", "variant": "7B", "quant": "gguf-q4", "repo": "cmeka/SeedVR2-GGUF", "min_vram_gb": 8, "workflow": "seedvr2", "notes": "BlockSwap + VAE tiling. ~6-8 min per 1 min of 1080p on 8GB (disclosed)."}},
+        "mid": {"safe": {"model_id": "seedvr2", "license_id": "seedvr2", "variant": "7B", "quant": "fp8", "repo": "ByteDance-Seed/SeedVR2-7B", "min_vram_gb": 16, "workflow": "seedvr2", "notes": "Light BlockSwap; pair with RIFE + FlashVSR."}},
+        "high": {"safe": {"model_id": "seedvr2", "license_id": "seedvr2", "variant": "7B", "quant": "bf16", "repo": "ByteDance-Seed/SeedVR2-7B", "min_vram_gb": 24, "workflow": "seedvr2", "notes": "No BlockSwap, 2K+ targets."}}
+      }
+    },
+    "llm": {
+      "tiers": {
+        "low": {"safe": {"model_id": "ollama", "license_id": "ollama", "variant": "qwen2.5:7b", "quant": "q4", "repo": "ollama:qwen2.5:7b", "min_vram_gb": 6, "workflow": "", "notes": "Text agents. VLM judge: qwen2.5vl:7b."}},
+        "mid": {"safe": {"model_id": "ollama", "license_id": "ollama", "variant": "qwen2.5:14b", "quant": "q4", "repo": "ollama:qwen2.5:14b", "min_vram_gb": 12, "workflow": "", "notes": "Higher-quality scripts/shot lists."}},
+        "high": {"safe": {"model_id": "ollama", "license_id": "ollama", "variant": "qwen2.5:32b", "quant": "q4", "repo": "ollama:qwen2.5:32b", "min_vram_gb": 24, "workflow": "", "notes": "Resident alongside video model; full-precision VLM."}}
+      }
+    }
+  }
+}
