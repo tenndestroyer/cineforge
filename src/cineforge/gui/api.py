@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 import threading
+from pathlib import Path
 from typing import Any
 
 from .. import __version__
@@ -239,8 +240,37 @@ class GuiApi:
             self._install_thread.start()
         return {"ok": True}
 
+    # ---- gallery ----
+    def project_frames(self, name: str) -> dict:
+        project = store.load(self.cfg.project_dir(name))
+        frames = []
+        for sh in project.all_shots():
+            for kind in ("video", "enhance", "keyframe"):
+                t = sh.accepted_take(kind)
+                if t and Path(t.path).is_file():
+                    frames.append({"shot": sh.id, "kind": kind, "path": t.path,
+                                   "video": Path(t.path).suffix.lower() in (".webm", ".mp4")})
+                    break
+        return {"frames": frames}
+
+    def serve_file(self, path: str) -> tuple[int, str, bytes]:
+        out = (self.cfg.comfy_dir / "output").resolve()
+        try:
+            rp = Path(path).resolve()
+            rp.relative_to(out)  # only serve files from the ComfyUI output dir
+        except (ValueError, OSError):
+            return 403, "text/plain; charset=utf-8", b"forbidden"
+        if not rp.is_file():
+            return 404, "text/plain; charset=utf-8", b"not found"
+        ctypes = {".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp",
+                  ".webm": "video/webm", ".mp4": "video/mp4"}
+        return 200, ctypes.get(rp.suffix.lower(), "application/octet-stream"), rp.read_bytes()
+
     # ---- routing ----
     def handle(self, method: str, path: str, query: dict, body: dict | None) -> tuple[int, str, bytes]:
+        # binary file serving bypasses the JSON wrapper
+        if method == "GET" and path == "/api/file":
+            return self.serve_file((query.get("path", [""]) or [""])[0])
         try:
             data = self._route(method, path, query, body or {})
             return 200, "application/json; charset=utf-8", _json(data)
@@ -284,6 +314,8 @@ class GuiApi:
             return self.rerender(body.get("name", ""))
         if method == "POST" and path == "/api/download_checkpoint":
             return self.download_checkpoint(body.get("model", ""))
+        if method == "GET" and path == "/api/project/frames":
+            return self.project_frames(one("name"))
         raise FileNotFoundError(f"no route: {method} {path}")
 
 

@@ -166,8 +166,8 @@ function Fetch-Weights {
     # Only fetch weights for stages that actually render today (currently: image).
     # Other stages download when their render path is wired, to avoid pulling tens of
     # GB of models that can't be used yet.
-    Info "Downloading weights for the wired render stages (image) ..."
-    & $PyExe "$Root\scripts\download_models.py" --tier auto --license-mode safe --confirm --only image
+    Info "Downloading weights for the wired render stages (image + video) ..."
+    & $PyExe "$Root\scripts\download_models.py" --tier auto --license-mode safe --confirm
     if ($LASTEXITCODE -ne 0) { Warn "Some weights failed to download (see above). You can re-run setup to retry." }
     else { Ok "All Safe-mode weights downloaded + verified" }
 }

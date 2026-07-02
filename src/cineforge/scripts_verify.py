@@ -18,7 +18,7 @@ from .models.registry import BackendRegistry
 
 # Subsystems whose render path is actually WIRED today (produces real output).
 # As each stage is wired, add it here so readiness/weights reflect reality.
-WIRED_SUBSYSTEMS = {"image"}
+WIRED_SUBSYSTEMS = {"image", "video"}
 
 
 def _check(name: str, ok: bool, detail: str) -> dict:

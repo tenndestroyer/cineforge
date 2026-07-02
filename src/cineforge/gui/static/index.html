@@ -154,6 +154,9 @@
         <span id="pd-stage" class="muted"></span>
       </div>
 
+      <h3>Rendered frames <button class="ghost" id="pd-refresh-frames" style="padding:2px 8px;font-size:12px;margin-left:6px">↻ refresh</button></h3>
+      <div id="pd-gallery" class="row" style="gap:8px;align-items:flex-start">nothing rendered yet</div>
+
       <h3>Quality &amp; length</h3>
       <div class="cols">
         <div>
@@ -254,6 +257,7 @@ async function pollEvents() {
       if (ev.pct != null) { $('#prog').style.width = ev.pct+'%'; $('#sb-fill').style.width = ev.pct+'%'; $('#prog-label').textContent = ev.stage+' — '+ev.pct+'%'; }
       if (ev.stage==='done') { $('#prog').style.width='100%'; $('#sb-fill').style.width='100%'; $('#prog-label').textContent='complete'; }
       if (ev.kind==='warn' && ev.message.indexOf('stopped at')>-1) { $('#sb-dot').className=''; }
+      if (curProject && (ev.message.indexOf('generated ')>-1 || ev.stage==='done')) loadFrames(curProject);
     }
     feed.scrollTop = feed.scrollHeight;
   } catch(e){}
@@ -295,7 +299,23 @@ async function openProject(name) {
     `<div class="shot"><b>${sh.id}</b> — ${sh.description||''}
       <textarea data-shot="${sh.id}">${(sh.keyframe_prompt||sh.description||'').replace(/</g,'&lt;')}</textarea></div>`
   ).join('') : '<span class="muted">No shots yet — click Run (full) to generate the script first.</span>';
+  loadFrames(name);
 }
+
+async function loadFrames(name) {
+  try {
+    const {frames} = await api('/api/project/frames?name='+encodeURIComponent(name));
+    const g = $('#pd-gallery');
+    if (!frames || !frames.length) { g.innerHTML = '<span class="muted">nothing rendered yet — click Run</span>'; return; }
+    g.innerHTML = frames.map(f => {
+      const src = '/api/file?path='+encodeURIComponent(f.path);
+      return f.video
+        ? `<video src="${src}" controls loop muted playsinline style="width:210px;border-radius:8px;border:1px solid var(--line)"></video>`
+        : `<img src="${src}" title="${f.shot} (${f.kind})" style="width:140px;border-radius:8px;border:1px solid var(--line)">`;
+    }).join('');
+  } catch(e){}
+}
+$('#pd-refresh-frames').onclick = () => curProject && loadFrames(curProject);
 
 async function saveSettings() {
   const res = parseInt($('#q-res').value,10);

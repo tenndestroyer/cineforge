@@ -22,6 +22,7 @@ from cineforge.errors import DownloadIntegrityError  # noqa: E402
 from cineforge.hardware import classify_vram, detect_gpus, primary_gpu  # noqa: E402
 from cineforge.models.downloader import verify_size  # noqa: E402
 from cineforge.models.matrix import ModelMatrix  # noqa: E402
+from cineforge.scripts_verify import WIRED_SUBSYSTEMS as WIRED  # noqa: E402
 
 _WEIGHT_EXTS = {".safetensors", ".gguf", ".bin", ".pth", ".ckpt", ".onnx"}
 
@@ -79,6 +80,7 @@ def main() -> int:
     ap.add_argument("--dry", action="store_true", help="print the plan only")
     ap.add_argument("--confirm", action="store_true", help="actually download")
     ap.add_argument("--only", default="", help="download only this subsystem (e.g. image, video)")
+    ap.add_argument("--all", action="store_true", help="download ALL subsystems (default: only wired stages)")
     args = ap.parse_args()
 
     cfg = Config.load()
@@ -91,6 +93,8 @@ def main() -> int:
     for sub in matrix.subsystems():
         if args.only and sub != args.only:
             continue
+        if not args.only and not args.all and sub not in WIRED:
+            continue  # default: only the stages that actually render
         c = matrix.resolve(sub, tier, args.license_mode)
         if c.repo and not c.repo.startswith("ollama:"):
             plan.append((sub, c))
